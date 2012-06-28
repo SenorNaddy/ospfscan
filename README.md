@@ -5,7 +5,11 @@ An OSPF Routing Protocol Monitor capable of scanning OSPFv2 for changes to netwo
 
 ## Requirements
 
+<<<<<<< HEAD
 * libtrace 3.10 available from [http://www.wand.net.nz](http://www.wand.net.nz)
+=======
+* libtrace 3.10 available from [http://www.wand.net.nz][http://www.wand.net.nz]
+>>>>>>> 74190caaae55005a70c412eb6bbe975af658465f
 * libwandevent
 * libsqlite3
 
