@@ -316,7 +316,18 @@ int main(int argc, char *argv[])
     int runAsDaemon = 0;
     int useInterface = 0;
     int arg;
+    int opt;
+    int longIndex = 0;
     libtrace_filter_t *filter;
+    opterr = 0;
+
+    static const struct option longOpts[] = {
+        { "interface", no_argument, NULL, 'i' },
+        { "debug", no_argument, NULL, 0},
+        { "daemon", no_argument, NULL, 'd' },
+        { NULL, no_argument, NULL, 0 }
+    };
+
     if(argc < 2)
     {
         usage(argv[0]);
@@ -327,7 +338,38 @@ int main(int argc, char *argv[])
         /*
          Rewrite this block of code to use getopt
          */
-        for (arg = 1; arg < argc-1; arg++)
+        opt = getopt_long(argc, argv, "idv?", longOpts, &longIndex);
+        while(opt != -1)
+        {
+            switch(opt)
+            {
+                case'i':
+                    useInterface = 1;
+                    break;
+                case 'd':
+                    runAsDaemon = 1;
+                    break;
+                case 0:     /* long option without a short arg */
+                    if( strcmp( "debug", longOpts[longIndex].name ) == 0 ) {
+                        verbose = 1;
+                    }
+                case '?':
+                    if (isprint (optopt))
+                        fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+                    else
+                        fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
+                    usage(argv[0]);
+                    return 1;
+               default:
+                 abort ();
+            }
+        }
+        if(optind == (argc-1))
+        {
+            usage(argv[0]);
+            return -1;
+        }
+        /*for (arg = 1; arg < argc-1; arg++)
         {
             if (strcmp(argv[arg], "--debug") == 0)
             {
@@ -341,7 +383,7 @@ int main(int argc, char *argv[])
             {
                 useInterface = 1;
             }
-        }
+        }*/
     }
     version();
 
