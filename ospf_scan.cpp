@@ -355,7 +355,6 @@ int main(int argc, char *argv[])
 	if(interface->count > 0) useInterface = 1;
 	if(daemon->count > 0) runAsDaemon = 1;
 	if(debug->count > 0) verbose = 1;
-        printf("filename %s\n", infiles->filename[0]);
         /*for (arg = 1; arg < argc-1; arg++)
         {
             if (strcmp(argv[arg], "--debug") == 0)
