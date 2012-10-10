@@ -18,5 +18,6 @@
 #include "logger.h"
 #include "event.h"
 #include <signal.h>
+#include "argtable2.h"
 
 using namespace std;

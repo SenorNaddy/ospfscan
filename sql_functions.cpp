@@ -105,7 +105,6 @@ int invalidateRoutes(sqlite3 *db, ospf_lsa_t *lsa, list<in_addr> routes)
 {
 	return 0;
 }
-}
 int numberOfResults(sqlite3 *db, char *zSQL)
 {
     int rows;

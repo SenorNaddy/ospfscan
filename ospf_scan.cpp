@@ -315,60 +315,47 @@ int main(int argc, char *argv[])
 	signal(SIGTERM, &cleanup);
     int runAsDaemon = 0;
     int useInterface = 0;
-    int arg;
-    int opt;
-    int longIndex = 0;
     libtrace_filter_t *filter;
     opterr = 0;
 
-    static const struct option longOpts[] = {
-        { "interface", no_argument, NULL, 'i' },
-        { "debug", no_argument, NULL, 0},
-        { "daemon", no_argument, NULL, 'd' },
-        { NULL, no_argument, NULL, 0 }
-    };
+    struct arg_file *database_file = arg_file1(NULL, "database", NULL, "SQLite3 database");
+    struct arg_lit *interface = arg_lit0("i", NULL, 		"interface");
+    struct arg_lit *daemon = arg_lit0("d", NULL,		"run as daemon");
+    struct arg_lit *debug = arg_lit0("v","verbose,debug",	"verbose messages");
+    struct arg_lit *help = arg_lit0("?h","help",		"display help");
+    struct arg_file *infiles = arg_file1(NULL,NULL,NULL,	"trace file or interface name");
+    struct arg_end *end = arg_end(20);
+    int nerrors;
+    void *argtable[] = {interface, database_file, daemon, debug, help, infiles, end};
 
-    if(argc < 2)
+
+    if(arg_nullcheck(argtable) != 0)
     {
-        usage(argv[0]);
-        return -1;
+	printf("%s: insufficient memory\n", argv[0]);
+	return -1;
+    }
+    nerrors = arg_parse(argc,argv,argtable);
+
+    if(help->count > 0)
+    {
+	logger(LOG_DAEMON | LOG_DEBUG, "Usage: %s", argv[0]);
+	arg_print_syntaxv(stdout, argtable, "\n");
+	arg_print_glossary(stdout, argtable,"	%-25s %s\n");
+	return 0;
+    }
+
+    if(nerrors > 0)
+    {
+	arg_print_errors(stdout,end,argv[0]);
+	logger(LOG_DAEMON | LOG_DEBUG, "Try '%s --help' for more information.\n", argv[0]);
+	return 0;
     }
     else
     {
-        /*
-         Rewrite this block of code to use getopt
-         */
-        opt = getopt_long(argc, argv, "idv?", longOpts, &longIndex);
-        while(opt != -1)
-        {
-            switch(opt)
-            {
-                case'i':
-                    useInterface = 1;
-                    break;
-                case 'd':
-                    runAsDaemon = 1;
-                    break;
-                case 0:     /* long option without a short arg */
-                    if( strcmp( "debug", longOpts[longIndex].name ) == 0 ) {
-                        verbose = 1;
-                    }
-                case '?':
-                    if (isprint (optopt))
-                        fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-                    else
-                        fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
-                    usage(argv[0]);
-                    return 1;
-               default:
-                 abort ();
-            }
-        }
-        if(optind == (argc-1))
-        {
-            usage(argv[0]);
-            return -1;
-        }
+	if(interface->count > 0) useInterface = 1;
+	if(daemon->count > 0) runAsDaemon = 1;
+	if(debug->count > 0) verbose = 1;
+        printf("filename %s\n", infiles->filename[0]);
         /*for (arg = 1; arg < argc-1; arg++)
         {
             if (strcmp(argv[arg], "--debug") == 0)
@@ -420,7 +407,7 @@ int main(int argc, char *argv[])
 
 
     int rc;
-    rc = sqlite3_open_v2("mon.db", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, NULL); //open this database, this needs SQLite 3.5.0 or higher
+    rc = sqlite3_open_v2(database_file->filename[0], &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, NULL); //open this database, this needs SQLite 3.5.0 or higher
     if ( rc )
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -436,7 +423,7 @@ int main(int argc, char *argv[])
     {
         strcat(str, "pcapfile:");
     }
-    strcat(str, argv[arg]);
+    strcat(str, infiles->filename[0]);
 	libtrace_t *trace = trace_create(str); //create our trace
 		if(useInterface) {
 			int one = 1;
@@ -511,6 +498,7 @@ int main(int argc, char *argv[])
     if(prog)
         free(prog);
 	     logger(LOG_DAEMON, "Shutting Down");
-     wand_destroy_event_handler(env.wand_ev_hdl);
+     	arg_freetable(argtable, sizeof(argtable)/sizeof(argtable[0]));
+	wand_destroy_event_handler(env.wand_ev_hdl);
 	return 0;
 }
