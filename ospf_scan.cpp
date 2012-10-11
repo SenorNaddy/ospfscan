@@ -18,7 +18,7 @@ static int process_mon_event(mon_env_t *env, libtrace_eventobj_t event);
 
 void version()
 {
-    printf("OSPF Route Monitor %.2f alpha\nSimon Wadsworth <sw162@cs.waikato.ac.nz>\n", 0.1);
+    printf("OSPF Route Monitor %.2f alpha\nSimon Wadsworth <sw162@cs.waikato.ac.nz>\n", 0.13);
     printf("Compiled against libtrace v%i.%i\n", LIBTRACE_API_VERSION >> 16, LIBTRACE_API_VERSION & 0xF);
     printf("Using SQLite v%s\n", SQLITE_VERSION);
 }
@@ -323,10 +323,11 @@ int main(int argc, char *argv[])
     struct arg_lit *daemon = arg_lit0("d", NULL,		"run as daemon");
     struct arg_lit *debug = arg_lit0("v","verbose,debug",	"verbose messages");
     struct arg_lit *help = arg_lit0("?h","help",		"display help");
+    struct arg_lit *versionf = arg_lit0(NULL,"version",		"version information");
     struct arg_file *infiles = arg_file1(NULL,NULL,NULL,	"trace file or interface name");
     struct arg_end *end = arg_end(20);
     int nerrors;
-    void *argtable[] = {interface, database_file, daemon, debug, help, infiles, end};
+    void *argtable[] = {interface, database_file, versionf, daemon, debug, help, infiles, end};
 
 
     if(arg_nullcheck(argtable) != 0)
@@ -341,6 +342,12 @@ int main(int argc, char *argv[])
 	logger(LOG_DAEMON | LOG_DEBUG, "Usage: %s", argv[0]);
 	arg_print_syntaxv(stdout, argtable, "\n");
 	arg_print_glossary(stdout, argtable,"	%-25s %s\n");
+	return 0;
+    }
+
+    if(versionf->count > 0)
+    {
+    	version();
 	return 0;
     }
 
